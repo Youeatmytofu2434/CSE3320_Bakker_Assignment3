@@ -22,8 +22,31 @@
 
 #include "mavalloc.h"
 
-int mavalloc_init( size_t size, enum ALGORITHM algorithm )
-{
+enum ALGORITHM{
+ FIRST_FIT = 0,
+ NEXT_FIT,
+ BEST_FIT,
+ WORST_FIT
+};
+
+//typedef?
+struct arenaMemory{
+  int size;
+  int next;
+  int prev;
+  int inuse;
+  int* pointer;
+  char* type;
+};
+
+#define ALIGN4(s) (((((s) - 1) >> 2) << 2) + 4)
+
+int mavalloc_init( size_t size, enum ALGORITHM algorithm ){
+  if(size<0){
+    return -1;
+  }
+  struct arenaMemory* arenaMem = NULL;
+  arenaMem = (struct arenaMemory*)malloc(size);
   return 0;
 }
 
