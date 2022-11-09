@@ -30,7 +30,7 @@ struct arenaMemory{
   int prev;
   int inuse;
   int* pointer;
-  char* type;
+  int type;
 };
 
 #define ALIGN4(s) (((((s) - 1) >> 2) << 2) + 4)
@@ -42,14 +42,24 @@ int mavalloc_init( size_t size, enum ALGORITHM algorithm ){
   struct arenaMemory* arenaMem = NULL;
   arenaMem = (struct arenaMemory*)malloc(size);
 
+  arenaMem->size=size;
+  arenaMem->next=-1;
+  arenaMem->prev=-1;
+  arenaMem->inuse=0;
+
   switch(algorithm){
     case FIRST_FIT:
+      arenaMem->type=1;
       break;
     case NEXT_FIT:
+      arenaMem->type=2;
       break;
     case BEST_FIT:
+      arenaMem->type=3;
       break;
     case WORST_FIT:
+      arenaMem->type=4;
+      break;
     default:
       break;
   }
@@ -58,6 +68,7 @@ int mavalloc_init( size_t size, enum ALGORITHM algorithm ){
 
 void mavalloc_destroy( )
 {
+  //free(*arenaMemory);
   return;
 }
 
@@ -69,6 +80,7 @@ void * mavalloc_alloc( size_t size )
 
 void mavalloc_free( void * ptr )
 {
+  
   return;
 }
 
