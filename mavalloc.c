@@ -19,15 +19,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-
+#include <stdlib.h>
 #include "mavalloc.h"
 
-enum ALGORITHM{
- FIRST_FIT = 0,
- NEXT_FIT,
- BEST_FIT,
- WORST_FIT
-};
 
 //typedef?
 struct arenaMemory{
@@ -47,6 +41,18 @@ int mavalloc_init( size_t size, enum ALGORITHM algorithm ){
   }
   struct arenaMemory* arenaMem = NULL;
   arenaMem = (struct arenaMemory*)malloc(size);
+
+  switch(algorithm){
+    case FIRST_FIT:
+      break;
+    case NEXT_FIT:
+      break;
+    case BEST_FIT:
+      break;
+    case WORST_FIT:
+    default:
+      break;
+  }
   return 0;
 }
 
