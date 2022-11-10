@@ -35,7 +35,7 @@
 */
 
 /* The maximum entries in our linked list / array */
-#define MAX_LINKED_LIST_SIZE 65535
+#define MAX_LINKED_LIST_SIZE 10000
 
 /* *** INTERNAL USE ONLY *** In an in-line implementation the root node
  * is always 0
@@ -50,14 +50,18 @@ static int initialized = 0;
 */
 static int lastUsed = -1;
 
-enum ALGORITHM globalAlgorithm;
-void * globalArena;
+static enum ALGORITHM globalAlgorithm;
+static void * globalArena;
+//prevents overloading and confusion when looking into this program the next hour
+//enum is self explanitory for the main algorithm used, but void star was assumed to be a generic pointer value, so i chose void * for arena
+//idk if these two lines causes the segfault on case 16 and 17 tho
 
 enum TYPE
 {
   H=0,
   P
 }; 
+//H means hole, P means taken
 /**
 *
 * \struct Node
@@ -86,10 +90,10 @@ struct Node
 {
 	/** If this array entry is being used as a node. 1 for in-use. 0 for empty */
 	int  in_use;
-  void * arena;
+	void * arena;
 	/** The value that this linked list node contains */
 	int  size;
-  enum TYPE type;
+	enum TYPE type;
 
 };
 
@@ -445,9 +449,11 @@ void printList()
 
 #define ALIGN4(s) (((((s) - 1) >> 2) << 2) + 4)
 //Teleport the cursor to skip the text (Ctrl+F 'Teleport')
-int mavalloc_init( size_t size, enum ALGORITHM algorithm ){
+int mavalloc_init( size_t size, enum ALGORITHM algorithm )
+{
   int i=0;
-  for(i=0; i<MAX_LINKED_LIST_SIZE; i++){
+  for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
+  {
     LinkedList[i].in_use=0;
     LinkedList[i].size=-1;
     LinkedList[i].arena=0;
@@ -462,6 +468,10 @@ int mavalloc_init( size_t size, enum ALGORITHM algorithm ){
   LinkedList[0].type=H;
   
   globalAlgorithm=algorithm;
+  //TODO: attempted to change the global variable, does this cause case 16 and 17 to segfault
+
+  //this whole function initializes the linked list
+  //setting it to all to blank, except for the starting node
 
   return 0;
 }
@@ -469,34 +479,56 @@ int mavalloc_init( size_t size, enum ALGORITHM algorithm ){
 void mavalloc_destroy( )
 {
   int i=0;
-  for(i=0; i<MAX_LINKED_LIST_SIZE; i++){
+  for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
+  {
     LinkedList[i].in_use=0;
     LinkedList[i].size=-1;
     LinkedList[i].arena=0;
     LinkedList[i].type=H;
   }
   free(globalArena);
+  //legit the same process as init, where everything is set to blank
+  //except that free now exists to prevent memory from crashing
   return;
 }
 
 void * mavalloc_alloc( size_t size )
 {
   void * ptr;
-  if(globalAlgorithm==FIRST_FIT){
+  if(globalAlgorithm==FIRST_FIT)
+  {
     int i=0;
-    for(i=0; i<MAX_LINKED_LIST_SIZE; i++){
+    for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
+	{
       if(LinkedList[i].in_use && LinkedList[i].type==H && LinkedList[i].size>size){
+        //If a block of the linked list is in use, is a hole, and has the proper size,
         LinkedList[i].type=P;
+        //changes type to prevent other usage
         ptr = LinkedList[i].arena;
+        //assignes the return value to the current "address" of the arena
 
+        //TODO: Bottom three lines
         //Split a node if bigger
         //Calculate remainder size
         //Insert new node with remainder sized type H
 
         LinkedList[i].size=ALIGN4(size);
+        //allocates a memory sizef
         break;
       }
     }
+  }
+  else if(globalAlgorithm==NEXT_FIT)
+  {
+
+  }
+  else if(globalAlgorithm==BEST_FIT)
+  {
+
+  }
+  else if(globalAlgorithm==WORST_FIT)
+  {
+
   }
   // only return NULL on failure
   return ptr;
@@ -512,8 +544,10 @@ int mavalloc_size( )
 {
   int number_of_nodes = 0;
   int i=0;
-  for(i=0; i<MAX_LINKED_LIST_SIZE; i++){
-    if(LinkedList[i].in_use){
+  for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
+  {
+    if(LinkedList[i].in_use)
+	{
       number_of_nodes++;
     }
   }
