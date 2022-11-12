@@ -431,7 +431,7 @@ int test_case_13()
 
   // If you failed here then your next fit is not splitting free blocks
   // correctly
-  TINYTEST_EQUAL( size, 3); 
+  TINYTEST_EQUAL( size, 3 ); 
   mavalloc_destroy( );
   return 1;
 }
@@ -459,7 +459,7 @@ int test_case_14()
   
   // If you failed here then your best fit is not splitting free blocks
   // correctly
-  TINYTEST_EQUAL( size, 3); 
+  TINYTEST_EQUAL( size, 3 ); 
   mavalloc_destroy( );
   return 1;
 }
