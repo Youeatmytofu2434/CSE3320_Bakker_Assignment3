@@ -593,7 +593,6 @@ void * mavalloc_alloc( size_t size )
     // linked list index's size
     int current           = 0;
     int i                 = 0;
-
     relativeBest          = MAX_LINKED_LIST_SIZE;
     relativeBestIndex     = 0;
 
@@ -619,29 +618,26 @@ void * mavalloc_alloc( size_t size )
     {
       if(i == relativeBestIndex)
       {
-        //If a block of the linked list is in use, is a hole, 
-        //and has the proper size,
-        LinkedList[i].type = P;
-        //changes type to prevent other usage
-        ptr = LinkedList[i].arena;
         //assignes the return value to the current "address" 
         //of the arena
-
+        ptr = LinkedList[i].arena;
+        
         //TODO: Bottom three lines
         //Split a node if bigger
         //Calculate remainder size
         int remainder                = LinkedList[i].size - size;
         //Insert new node with remainder sized type H
         insertNode(remainder);
-        LinkedList[i+1].in_use       = 0;
-        LinkedList[i+1].size         = remainder;
+        LinkedList[i+1].in_use       = 0; // THIS MIGHT BE THE PROBLEM
+                                          // but broke more test cases
+        LinkedList[i+1].size         = relativeBest;
         LinkedList[i+1].arena        = &LinkedList[i];
         //elder scrolls arena
         LinkedList[i+1].type         = H;
         //inserts new node as blank node
 
         LinkedList[i].size           = ALIGN4(size);
-        //allocates a memory sizef
+        LinkedList[i].type           = P;
         break;
       }
     }
