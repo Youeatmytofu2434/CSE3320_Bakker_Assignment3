@@ -539,17 +539,13 @@ void * mavalloc_alloc( size_t size )
         //Split a node if bigger
         //Calculate remainder size
         int remainder = LinkedList[i].size - size;
-        if(remainder>0)
-        {
-          //Insert new node with remainder sized type H
-          insertNode(remainder);
-          LinkedList[i+1].in_use           = 1;
-          LinkedList[i+1].size             = remainder;
-          LinkedList[i+1].arena            = &LinkedList[i];
-          LinkedList[i+1].type             = H;
-          //this TRIES to split the nodes, but idk
-        }
-        
+        //Insert new node with remainder sized type H
+        insertNode(remainder);
+        LinkedList[i+1].in_use           = 1;
+        LinkedList[i+1].size             = remainder;
+        LinkedList[i+1].arena            = &LinkedList[i];
+        LinkedList[i+1].type             = H;
+        //this TRIES to split the nodes, but idk
 
         LinkedList[i].size               = ALIGN4(size);
         //allocates a memory sizef
@@ -568,7 +564,7 @@ void * mavalloc_alloc( size_t size )
               && LinkedList[i].size>size)
       {
         //changes type to prevent other usage
-        
+        LinkedList[i].type = P;
         //assignes the return value to the current "address" of
         //the arenas
         ptr = LinkedList[i].arena;
@@ -578,19 +574,14 @@ void * mavalloc_alloc( size_t size )
         //Calculate remainder size
         int remainder = LinkedList[i].size - size;
         //Insert new node with remainder sized type H
-        if(remainder>0)
-        {
-          insertNode(remainder);
-          LinkedList[i+1].in_use     = 1;
-          LinkedList[i+1].size       = remainder;
-          LinkedList[i+1].arena      = &LinkedList[i];
-          LinkedList[i+1].type       = H;
-          //this TRIES to split the nodes, but idk
-        }
-        
+        insertNode(remainder);
+        LinkedList[i+1].in_use     = 0;
+        LinkedList[i+1].size       = remainder;
+        LinkedList[i+1].arena      = &LinkedList[i];
+        LinkedList[i+1].type       = H;
+        //this TRIES to split the nodes, but idk
 
         LinkedList[i].size         = ALIGN4(size);
-        LinkedList[i].type = P;
         //allocates a memory sizef
         break;
       }
@@ -636,18 +627,14 @@ void * mavalloc_alloc( size_t size )
         //Calculate remainder size
         int remainder                = LinkedList[i].size - size;
         //Insert new node with remainder sized type H
-        if(remainder>0)
-        {
-          insertNode(remainder);
-          LinkedList[i+1].in_use       = 1; // THIS MIGHT BE THE PROBLEM
+        insertNode(remainder);
+        LinkedList[i+1].in_use       = 0; // THIS MIGHT BE THE PROBLEM
                                           // but broke more test cases
-          LinkedList[i+1].size         = relativeBest;
-          LinkedList[i+1].arena        = &LinkedList[i];
-          //elder scrolls arena
-          LinkedList[i+1].type         = H;
-          //inserts new node as blank node
-        }
-        
+        LinkedList[i+1].size         = relativeBest;
+        LinkedList[i+1].arena        = &LinkedList[i];
+        //elder scrolls arena
+        LinkedList[i+1].type         = H;
+        //inserts new node as blank node
 
         LinkedList[i].size           = ALIGN4(size);
         LinkedList[i].type           = P;
@@ -681,7 +668,9 @@ void * mavalloc_alloc( size_t size )
     {
       if(i == relativeWorstIndex)
         {
-          //If a block of the linked list is in use, is a hole, and has the proper size...
+          //If a block of the linked list is in use, is a hole, and has the proper size,
+          LinkedList[i].type = P;
+          //changes type to prevent other usage
           ptr = LinkedList[i].arena;
           //assignes the return value to the current "address" of the arena
 
@@ -690,21 +679,16 @@ void * mavalloc_alloc( size_t size )
           //Calculate remainder size
           int remainder = LinkedList[i].size - size;
           //Insert new node with remainder sized type H
-          if(remainder>0)
-          {
-            insertNode(remainder);
-            LinkedList[i+1].in_use       = 1;
-            LinkedList[i+1].size         = remainder;
-            LinkedList[i+1].arena        = &LinkedList[i];
-            LinkedList[i+1].type         = H;
-            //elder scrolls arena
-            //new node as blank node
-          }
-          
+          insertNode(remainder);
+          LinkedList[i+1].in_use       = 1;
+          LinkedList[i+1].size         = remainder;
+          LinkedList[i+1].arena        = &LinkedList[i];
+          //elder scrolls arena
+          LinkedList[i+1].type         = H;
+          //new node as blank node
 
 
           LinkedList[i].size           = ALIGN4(size);
-          LinkedList[i].type = P;
           //allocates a memory size
           break;
         }
@@ -716,25 +700,7 @@ void * mavalloc_alloc( size_t size )
 
 void mavalloc_free( void * ptr )
 {
-  //TODO: What on earth is this free method??
-  int currentSize=-1;
-  int i=0;
-  for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
-  {
-    if(ptr==LinkedList[i].arena && LinkedList[i].type==H && !LinkedList[i].in_use)
-    {
-      currentSize=LinkedList[i].size;
-      break;
-    }
-  }
-  if(currentSize!=-1)
-  {  
-    LinkedList[i].in_use = 1;
-    LinkedList[i].size = 0;
-    LinkedList[i].arena = &LinkedList[i];
-    LinkedList[i].type = H;
-    removeNode(currentSize);
-  }
+  
   return;
 }
 
