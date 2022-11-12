@@ -187,7 +187,7 @@ int insertNodeInternal(int previous, int size)
 {
 	int i = 0;
 
-	if (initialized && previous < 0 || previous >= MAX_LINKED_LIST_SIZE)
+	if ((initialized && previous < 0) || previous >= MAX_LINKED_LIST_SIZE)
 	{
 		printf("ERROR: Tried to insert a node beyond our bounds %d\n", previous);
 		return -1;
@@ -458,56 +458,56 @@ void printList()
 int mavalloc_init( size_t size, enum ALGORITHM algorithm )
 {
 	GlobalInitSize = size;
-	//sets the global variable to keep for later
-  	int i=0;
-  	for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
-  	{
-    	LinkedList[i].in_use=0;
-    	LinkedList[i].size=-1;
-    	LinkedList[i].arena=0;
-    	LinkedList[i].type=H;
-  	}
-	//initializes linked list
+  //sets the global variable to keep for later
+  int i=0;
+  for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
+  {
+    LinkedList[i].in_use=0;
+    LinkedList[i].size=-1;
+    LinkedList[i].arena=0;
+    LinkedList[i].type=H;
+  }
+  //initializes linked list
 
-  	globalArena = malloc(ALIGN4(size));
-	//elder scrolls arena
+  globalArena = malloc(ALIGN4(size));
+  //elder scrolls arena
 
-  	LinkedList[0].in_use=1;
-  	LinkedList[0].size=ALIGN4(size);
-  	LinkedList[0].arena=globalArena;
-  	LinkedList[0].type=H;
-	//initializes first element to be the first pointer
-  
-  	globalAlgorithm=algorithm;
+  LinkedList[0].in_use=1;
+  LinkedList[0].size=ALIGN4(size);
+  LinkedList[0].arena=globalArena;
+  LinkedList[0].type=H;
+  //initializes first element to be the first pointer
 
-  	//this whole function initializes the linked list
-  	//setting it to all to blank, except for the starting node
+  globalAlgorithm=algorithm;
 
-  	return 0;
+  //this whole function initializes the linked list
+  //setting it to all to blank, except for the starting node
+
+  return 0;
 }
 
 void mavalloc_destroy( )
 {
 	GlobalInitSize=0;
 	//sets size to 0 for a good programming practice
-  	int i=0;
-  	for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
-  	{
-    	LinkedList[i].in_use=0;
-    	LinkedList[i].size=-1;
-    	LinkedList[i].arena=0;
-    	LinkedList[i].type=H;
-  	}
-	//thanos snaps everything. all will be reduced to nothingness
-  	free(globalArena);
-  	//legit the same process as init, where everything is set to blank
-  	//except that free now exists to prevent memory from crashing
-  	return;
+  int i=0;
+  for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
+  {
+    LinkedList[i].in_use=0;
+    LinkedList[i].size=-1;
+    LinkedList[i].arena=0;
+    LinkedList[i].type=H;
+  }
+  //thanos snaps everything. all will be reduced to nothingness
+  free(globalArena);
+  //legit the same process as init, where everything is set to blank
+  //except that free now exists to prevent memory from crashing
+  return;
 }
 
 void * mavalloc_alloc( size_t size )
 {
-  	void * ptr;
+  void * ptr;
 
 	int relativeWorst=0;
 	int relativeWorstIndex=-1;
@@ -516,185 +516,184 @@ void * mavalloc_alloc( size_t size )
 	int relativeBestIndex=-1;
 	//initialization
 
-	if(GlobalInitSize<size)
+	if(GlobalInitSize < size)
 	{
 		return NULL;
 	}
 	//no size, no service
 
-  	if(globalAlgorithm==FIRST_FIT)
-  	{
-    	int i=0;
-    	for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
-		{
-			//If a block of the linked list is in use, is a hole, and has the proper size,
-      		if(LinkedList[i].in_use && LinkedList[i].type==H && LinkedList[i].size>size)
-	  		{
-        		//changes type to prevent other usage
-        		LinkedList[i].type=P;
-        		//assignes the return value to the current "address" of the arenas
-        		ptr = LinkedList[i].arena;
+  if(globalAlgorithm==FIRST_FIT)
+  {
+    int i=0;
+    for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
+    {
+      //If a block of the linked list is in use, is a hole, and has the proper size,
+      if(LinkedList[i].in_use && LinkedList[i].type==H && LinkedList[i].size>size)
+      {
+        //changes type to prevent other usage
+        LinkedList[i].type=P;
+        //assignes the return value to the current "address" of the arenas
+        ptr = LinkedList[i].arena;
 
-        		//TODO: Bottom three lines
-        		//Split a node if bigger
-        		//Calculate remainder size
-				int remainder = LinkedList[i].size-size;
-        		//Insert new node with remainder sized type H
-				insertNode(remainder);
-				LinkedList[i+1].in_use=0;
-    			LinkedList[i+1].size=remainder;
-    			LinkedList[i+1].arena=&LinkedList[i];
-    			LinkedList[i+1].type=H;
-				//this TRIES to split the nodes, but idk
+        //TODO: Bottom three lines
+        //Split a node if bigger
+        //Calculate remainder size
+        int remainder = LinkedList[i].size-size;
+        //Insert new node with remainder sized type H
+        insertNode(remainder);
+        LinkedList[i+1].in_use=0;
+        LinkedList[i+1].size=remainder;
+        LinkedList[i+1].arena=&LinkedList[i];
+        LinkedList[i+1].type=H;
+        //this TRIES to split the nodes, but idk
 
-        		LinkedList[i].size=ALIGN4(size);
-        		//allocates a memory sizef
-        		break;
-      		}
-		}
-  	}
-  	else if(globalAlgorithm==NEXT_FIT)
-  	{
-		int i=0;
-    	for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
-		{
-			//If a block of the linked list is in use, is a hole, and has the proper size,
-      		if(LinkedList[i].in_use && LinkedList[i].type==H && LinkedList[i].size>size)
-	  		{
-        		//changes type to prevent other usage
-        		LinkedList[i].type=P;
-        		//assignes the return value to the current "address" of the arenas
-        		ptr = LinkedList[i].arena;
+        LinkedList[i].size=ALIGN4(size);
+        //allocates a memory sizef
+        break;
+      }
+    }
+  }
+  else if(globalAlgorithm==NEXT_FIT)
+  {
+    int i=0;
+    for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
+    {
+      //If a block of the linked list is in use, is a hole, and has the proper size,
+      if(LinkedList[i].in_use && LinkedList[i].type==H && LinkedList[i].size>size)
+      {
+        //changes type to prevent other usage
+        LinkedList[i].type=P;
+        //assignes the return value to the current "address" of the arenas
+        ptr = LinkedList[i].arena;
 
-        		//TODO: Bottom three lines
-        		//Split a node if bigger
-        		//Calculate remainder size
-				int remainder = LinkedList[i].size-size;
-        		//Insert new node with remainder sized type H
-				insertNode(remainder);
-				LinkedList[i+1].in_use=0;
-    			LinkedList[i+1].size=remainder;
-    			LinkedList[i+1].arena=&LinkedList[i];
-    			LinkedList[i+1].type=H;
-				//this TRIES to split the nodes, but idk
+        //TODO: Bottom three lines
+        //Split a node if bigger
+        //Calculate remainder size
+        int remainder = LinkedList[i].size-size;
+        //Insert new node with remainder sized type H
+        insertNode(remainder);
+        LinkedList[i+1].in_use=0;
+        LinkedList[i+1].size=remainder;
+        LinkedList[i+1].arena=&LinkedList[i];
+        LinkedList[i+1].type=H;
+        //this TRIES to split the nodes, but idk
 
-        		LinkedList[i].size=ALIGN4(size);
-        		//allocates a memory sizef
-        		break;
-      		}
-		}
-  	}
-  	else if(globalAlgorithm==BEST_FIT)
-  	{
-		int current=0;
-		//current represents the current value of the MavAlloc linked list index's size
-		int i=0;
+        LinkedList[i].size=ALIGN4(size);
+        //allocates a memory sizef
+        break;
+      }
+    }
+  }
+  else if(globalAlgorithm==BEST_FIT)
+  {
+    int current=0;
+    //current represents the current value of the MavAlloc linked list index's size
+    int i=0;
 
-		relativeBest=MAX_LINKED_LIST_SIZE;
-		relativeBestIndex=0;
+    relativeBest=MAX_LINKED_LIST_SIZE;
+    relativeBestIndex=0;
 
-    	for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
-		{
-			current=0;
-			//resets current to 0
-			if(LinkedList[i].in_use && LinkedList[i].type==H && LinkedList[i].size>size)
-	  		{
-				current=LinkedList[i].size-size;
-				if(current<relativeBest)
-				{
-					//relative best is different from relative worst, like a max and min search
-					relativeBestIndex=i;
-					relativeBest=current;
-				}
-      		}
-    	}
-		
-		
+    for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
+    {
+      current=0;
+      //resets current to 0
+      if(LinkedList[i].in_use && LinkedList[i].type==H && LinkedList[i].size>size)
+      {
+        current=LinkedList[i].size-size;
+        if(current<relativeBest)
+        {
+          //relative best is different from relative worst, like a max and min search
+          relativeBestIndex=i;
+          relativeBest=current;
+        }
+      }
+    }
+  
+  
+    for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
+    {
+      if(i==relativeBestIndex)
+      {
+        //If a block of the linked list is in use, is a hole, and has the proper size,
+        LinkedList[i].type=P;
+        //changes type to prevent other usage
+        ptr = LinkedList[i].arena;
+        //assignes the return value to the current "address" of the arena
 
-    	for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
-		{
-			if(i==relativeBestIndex)
-	  		{
-        		//If a block of the linked list is in use, is a hole, and has the proper size,
-        		LinkedList[i].type=P;
-        		//changes type to prevent other usage
-        		ptr = LinkedList[i].arena;
-        		//assignes the return value to the current "address" of the arena
+        //TODO: Bottom three lines
+        //Split a node if bigger
+        //Calculate remainder size
+        int remainder = LinkedList[i].size-size;
+        //Insert new node with remainder sized type H
+        insertNode(remainder);
+        LinkedList[i+1].in_use=0;
+        LinkedList[i+1].size=remainder;
+        LinkedList[i+1].arena=&LinkedList[i];
+        //elder scrolls arena
+        LinkedList[i+1].type=H;
+        //inserts new node as blank node
 
-        		//TODO: Bottom three lines
-        		//Split a node if bigger
-        		//Calculate remainder size
-				int remainder = LinkedList[i].size-size;
-        		//Insert new node with remainder sized type H
-				insertNode(remainder);
-				LinkedList[i+1].in_use=0;
-    			LinkedList[i+1].size=remainder;
-    			LinkedList[i+1].arena=&LinkedList[i];
-				//elder scrolls arena
-    			LinkedList[i+1].type=H;
-				//inserts new node as blank node
+        LinkedList[i].size=ALIGN4(size);
+        //allocates a memory sizef
+        break;
+      }
+    }
+  }
+  else if(globalAlgorithm==WORST_FIT)
+  {
+    int current=0;
+    int i=0;
+    relativeWorst=0;
+    relativeWorstIndex=0;
+    for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
+    {
+      current=0;
+      if(LinkedList[i].in_use && LinkedList[i].type==H && LinkedList[i].size>size)
+      {
+        current=LinkedList[i].size-size;
+        if(current>relativeWorst)
+        {
+          //relative best is different from relative worst, like a max and min search
+          relativeWorstIndex=i;
+          relativeWorst=current;
+        }
+      }
+    }
+    
+    
 
-        		LinkedList[i].size=ALIGN4(size);
-        		//allocates a memory sizef
-        		break;
-      		}
-    	}
-  	}
-  	else if(globalAlgorithm==WORST_FIT)
-  	{
-		int current=0;
-		int i=0;
-		relativeWorst=0;
-		relativeWorstIndex=0;
-    	for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
-		{
-			current=0;
-			if(LinkedList[i].in_use && LinkedList[i].type==H && LinkedList[i].size>size)
-	  		{
-				current=LinkedList[i].size-size;
-				if(current>relativeWorst)
-				{
-					//relative best is different from relative worst, like a max and min search
-					relativeWorstIndex=i;
-					relativeWorst=current;
-				}
-      		}
-    	}
-		
-		
+    for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
+    {
+      if(i==relativeWorstIndex)
+        {
+          //If a block of the linked list is in use, is a hole, and has the proper size,
+          LinkedList[i].type=P;
+          //changes type to prevent other usage
+          ptr = LinkedList[i].arena;
+          //assignes the return value to the current "address" of the arena
 
-    	for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
-		{
-			if(i==relativeWorstIndex)
-	  		{
-        		//If a block of the linked list is in use, is a hole, and has the proper size,
-        		LinkedList[i].type=P;
-        		//changes type to prevent other usage
-        		ptr = LinkedList[i].arena;
-        		//assignes the return value to the current "address" of the arena
-
-        		//TODO: Bottom three lines
-        		//Split a node if bigger
-        		//Calculate remainder size
-				int remainder = LinkedList[i].size-size;
-        		//Insert new node with remainder sized type H
-				insertNode(remainder);
-				LinkedList[i+1].in_use=0;
-    			LinkedList[i+1].size=remainder;
-    			LinkedList[i+1].arena=&LinkedList[i];
-				//elder scrolls arena
-    			LinkedList[i+1].type=H;
-				//new node as blank node
+          //TODO: Bottom three lines
+          //Split a node if bigger
+          //Calculate remainder size
+          int remainder = LinkedList[i].size-size;
+          //Insert new node with remainder sized type H
+          insertNode(remainder);
+          LinkedList[i+1].in_use=0;
+          LinkedList[i+1].size=remainder;
+          LinkedList[i+1].arena=&LinkedList[i];
+          //elder scrolls arena
+          LinkedList[i+1].type=H;
+          //new node as blank node
 
 
-        		LinkedList[i].size=ALIGN4(size);
-        		//allocates a memory size
-        		break;
-      		}
-    	}
-  	}
-  	// only return NULL on failure
-  	return ptr;
+          LinkedList[i].size=ALIGN4(size);
+          //allocates a memory size
+          break;
+        }
+    }
+  }
+  // only return NULL on failure
+  return ptr;
 }
 
 void mavalloc_free( void * ptr )
@@ -710,7 +709,7 @@ int mavalloc_size( )
   for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
   {
     if(LinkedList[i].in_use)
-	{
+	  {
       number_of_nodes++;
     }
   }
