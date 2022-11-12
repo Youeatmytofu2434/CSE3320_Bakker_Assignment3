@@ -1,0 +1,7 @@
+// TODO
+
+// 11/11/22
+main.c 490: WF not splitting free blocks correctly
+main.c 463: BF not splitting free blocks correctly
+main.c 435: NF not splitting free blocks correctly
+main.c 126: mavalloc_alloc not working as intended
