@@ -528,7 +528,7 @@ void * mavalloc_alloc( size_t size )
       //If a block of the linked list is in use, is a hole, 
       //and has the proper size,
       if(LinkedList[i].in_use && LinkedList[i].type == H
-              && LinkedList[i].size > size)
+              && LinkedList[i].size >= size)
       {
         //changes type to prevent other usage
         LinkedList[i].type = P;
@@ -561,7 +561,7 @@ void * mavalloc_alloc( size_t size )
       //If a block of the linked list is in use, is a hole, 
       // and has the proper size,
       if(LinkedList[i].in_use && LinkedList[i].type==H 
-              && LinkedList[i].size>size)
+              && LinkedList[i].size>=size)
       {
         //changes type to prevent other usage
         LinkedList[i].type = P;
@@ -574,12 +574,16 @@ void * mavalloc_alloc( size_t size )
         //Calculate remainder size
         int remainder = LinkedList[i].size - size;
         //Insert new node with remainder sized type H
-        insertNode(remainder);
-        LinkedList[i+1].in_use     = 0;
-        LinkedList[i+1].size       = remainder;
-        LinkedList[i+1].arena      = &LinkedList[i];
-        LinkedList[i+1].type       = H;
-        //this TRIES to split the nodes, but idk
+        if(LinkedList[i].size!=size)
+        {
+          insertNode(remainder);
+          LinkedList[i+1].in_use     = 0;
+          LinkedList[i+1].size       = remainder;
+          LinkedList[i+1].arena      = &LinkedList[i];
+          LinkedList[i+1].type       = H;
+          //this TRIES to split the nodes, but idk
+        }
+        
 
         LinkedList[i].size         = ALIGN4(size);
         //allocates a memory sizef
@@ -602,7 +606,7 @@ void * mavalloc_alloc( size_t size )
       current = 0;
 
       if(LinkedList[i].in_use && LinkedList[i].type == H 
-              && LinkedList[i].size > size)
+              && LinkedList[i].size >= size)
       {
         current = LinkedList[i].size - size;
         if(current < relativeBest)
@@ -652,7 +656,7 @@ void * mavalloc_alloc( size_t size )
     {
       current = 0;
       if(LinkedList[i].in_use && LinkedList[i].type==H 
-            && LinkedList[i].size>size)
+            && LinkedList[i].size>=size)
       {
         current = LinkedList[i].size - size;
         if(current > relativeWorst)
@@ -700,7 +704,26 @@ void * mavalloc_alloc( size_t size )
 
 void mavalloc_free( void * ptr )
 {
-  
+  //TODO: What on earth is this free method??
+  int currentSize=-1;
+  int i=0;
+  for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
+  {
+    if(ptr==LinkedList[i].arena && LinkedList[i].type==P && LinkedList[i].in_use)
+    {
+      currentSize=LinkedList[i].size;
+      break;
+    }
+  }
+  if(currentSize!=-1)
+  {  
+    LinkedList[i].type = H;
+    if(LinkedList[i+1].in_use && LinkedList[i+1].type == H )
+    {
+      LinkedList[i].size = LinkedList[i].size+LinkedList[i+1].size;
+      removeNode(LinkedList[i+1].size);
+    }
+  }
   return;
 }
 
