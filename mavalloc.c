@@ -35,7 +35,7 @@
 */
 
 /* The maximum entries in our linked list / array */
-#define MAX_LINKED_LIST_SIZE 65535
+#define MAX_LINKED_LIST_SIZE 128000
 
 /* *** INTERNAL USE ONLY *** In an in-line implementation the root node
  * is always 0
@@ -453,7 +453,7 @@ void printList()
 
 
 #define ALIGN4(s) (((((s) - 1) >> 2) << 2) + 4)
-//Teleport the cursor to skip the text (Ctrl+F 'Teleport')
+
 int mavalloc_init( size_t size, enum ALGORITHM algorithm )
 {
 	GlobalInitSize = size;
@@ -528,7 +528,7 @@ void * mavalloc_alloc( size_t size )
       //If a block of the linked list is in use, is a hole, 
       //and has the proper size,
       if(LinkedList[i].in_use && LinkedList[i].type == H
-              && LinkedList[i].size >= size)
+              && LinkedList[i].size >= ALIGN4(size))
       {
         //changes type to prevent other usage
         LinkedList[i].type = P;
@@ -561,7 +561,7 @@ void * mavalloc_alloc( size_t size )
       //If a block of the linked list is in use, is a hole, 
       // and has the proper size,
       if(LinkedList[i].in_use && LinkedList[i].type==H 
-              && LinkedList[i].size>=size)
+              && LinkedList[i].size>=ALIGN4(size))
       {
         //changes type to prevent other usage
         LinkedList[i].type = P;
@@ -572,9 +572,9 @@ void * mavalloc_alloc( size_t size )
         //TODO: Bottom three lines
         //Split a node if bigger
         //Calculate remainder size
-        int remainder = LinkedList[i].size - size;
+        int remainder = LinkedList[i].size - ALIGN4(size);
         //Insert new node with remainder sized type H
-        if(LinkedList[i].size!=size)
+        if(LinkedList[i].size!=ALIGN4(size))
         {
           insertNode(remainder);
           LinkedList[i+1].in_use     = 0;
@@ -606,9 +606,9 @@ void * mavalloc_alloc( size_t size )
       current = 0;
 
       if(LinkedList[i].in_use && LinkedList[i].type == H 
-              && LinkedList[i].size >= size)
+              && LinkedList[i].size >= ALIGN4(size))
       {
-        current = LinkedList[i].size - size;
+        current = LinkedList[i].size - ALIGN4(size);
         if(current < relativeBest)
         {
           //relative best is different from relative worst, 
@@ -631,14 +631,18 @@ void * mavalloc_alloc( size_t size )
         //Calculate remainder size
         int remainder                = LinkedList[i].size - size;
         //Insert new node with remainder sized type H
-        insertNode(remainder);
-        LinkedList[i+1].in_use       = 0; // THIS MIGHT BE THE PROBLEM
+        if(LinkedList[i].size!=ALIGN4(size))
+        {
+          insertNode(remainder);
+          LinkedList[i+1].in_use       = 1; // THIS MIGHT BE THE PROBLEM
                                           // but broke more test cases
-        LinkedList[i+1].size         = relativeBest;
-        LinkedList[i+1].arena        = &LinkedList[i];
-        //elder scrolls arena
-        LinkedList[i+1].type         = H;
-        //inserts new node as blank node
+          LinkedList[i+1].size         = ALIGN4(relativeBest);
+          LinkedList[i+1].arena        = &LinkedList[i];
+          //elder scrolls arena
+          LinkedList[i+1].type         = H;
+          //inserts new node as blank node
+        }
+        
 
         LinkedList[i].size           = ALIGN4(size);
         LinkedList[i].type           = P;
@@ -719,6 +723,16 @@ void mavalloc_free( void * ptr )
   {  
     LinkedList[i].type = H;
     if(LinkedList[i+1].in_use && LinkedList[i+1].type == H )
+    {
+      LinkedList[i].size = LinkedList[i].size+LinkedList[i+1].size;
+      removeNode(LinkedList[i+1].size);
+    }
+  }
+
+  i=0;
+  for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
+  {
+    if(LinkedList[i].in_use && LinkedList[i+1].type == H && LinkedList[i].type==H && LinkedList[i+1].in_use)
     {
       LinkedList[i].size = LinkedList[i].size+LinkedList[i+1].size;
       removeNode(LinkedList[i+1].size);
