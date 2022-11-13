@@ -50,17 +50,17 @@ static int initialized = 0;
 */
 static int lastUsed = -1;
 
+//keeps track of selected algorithm until destruction
 static enum ALGORITHM globalAlgorithm;
-//keeps track of algorithm
+//elder scrolls arena (keeps track of arena to not lose itself later)
 static void * globalArena;
-//elder scrolls arena
-static int GlobalInitSize;
 //meant to refuse service if size alloced is too big for what is currently held
 //and keep track of TOTAL size
+static int GlobalInitSize;
+//keeps track of the placement after memory allocation from the NEXT_FIT algortihm, the algorithm made by satan himself
+static int globalNextIndex=0;
 
-//prevents overloading and confusion when looking into this program the next hour
 //enum is self explanitory for the main algorithm used, but void star was assumed to be a generic pointer value, so i chose void * for arena
-
 enum TYPE
 {
   H=0,
@@ -95,9 +95,12 @@ struct Node
 {
 	/** If this array entry is being used as a node. 1 for in-use. 0 for empty */
 	int  in_use;
+  //elder scrolls arena
+  //keeps track of the address of the specific node
 	void * arena;
 	/** The value that this linked list node contains */
 	int  size;
+  //determines if index at linked list is a hole or not
 	enum TYPE type;
 
 };
@@ -456,8 +459,11 @@ void printList()
 
 int mavalloc_init( size_t size, enum ALGORITHM algorithm )
 {
-	GlobalInitSize = size;
   //sets the global variable to keep for later
+  //intends to deny service if the requested size is too big for the initialized memory
+	GlobalInitSize = size;
+  
+  //initializes linked list
   int i=0;
   for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
   {
@@ -466,29 +472,29 @@ int mavalloc_init( size_t size, enum ALGORITHM algorithm )
     LinkedList[i].arena    = 0;
     LinkedList[i].type     = H;
   }
-  //initializes linked list
-
-  globalArena = malloc(ALIGN4(size));
+  
   //elder scrolls arena
+  //sets the start of the arena to an malloc'ed memory address
+  globalArena = malloc(ALIGN4(size));
+  
 
+  //initializes first element to be the first pointer
   LinkedList[0].in_use     = 1;
   LinkedList[0].size       = ALIGN4(size);
   LinkedList[0].arena      = globalArena;
   LinkedList[0].type       = H;
-  //initializes first element to be the first pointer
-
+  
+  //yes, this floor is made of floor
   globalAlgorithm = algorithm;
-
-  //this whole function initializes the linked list
-  //setting it to all to blank, except for the starting node
-
   return 0;
 }
 
 void mavalloc_destroy( )
 {
+  //sets size to 0 for a healthy programming practice
 	GlobalInitSize = 0;
-	//sets size to 0 for a good programming practice
+	
+  //thanos snaps everything. all will be reduced to nothingness
   int i=0;
   for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
   {
@@ -497,8 +503,9 @@ void mavalloc_destroy( )
     LinkedList[i].arena = 0;
     LinkedList[i].type = H;
   }
-  //thanos snaps everything. all will be reduced to nothingness
+  
   free(globalArena);
+  globalNextIndex=0;
   //legit the same process as init, where everything is set to blank
   //except that free now exists to prevent memory from crashing
   return;
@@ -506,8 +513,10 @@ void mavalloc_destroy( )
 
 void * mavalloc_alloc( size_t size )
 {
+  //sets up return value
   void * ptr;
 
+  //this is out of the scope of if statements because the code yells at me if i dont
 	int relativeWorst             = 0;
 	int relativeWorstIndex        = -1;
   int relativeBestIndex         = -1;
@@ -532,11 +541,10 @@ void * mavalloc_alloc( size_t size )
       {
         //changes type to prevent other usage
         LinkedList[i].type = P;
-        //assignes the return value to the current "address" of the arenas
+        //assignes the return value to the current "address" of the arena
         ptr = LinkedList[i].arena;
 
-        //TODO: Bottom three lines
-        //Split a node if bigger
+        //Splits a node if bigger
         //Calculate remainder size
         int remainder = LinkedList[i].size - size;
         //Insert new node with remainder sized type H
@@ -545,18 +553,16 @@ void * mavalloc_alloc( size_t size )
         LinkedList[i+1].size             = remainder;
         LinkedList[i+1].arena            = &LinkedList[i];
         LinkedList[i+1].type             = H;
-        //this TRIES to split the nodes, but idk
 
+        //changes the current node too
         LinkedList[i].size               = ALIGN4(size);
-        //allocates a memory sizef
         break;
       }
     }
   }
   else if(globalAlgorithm == NEXT_FIT)
   {
-    int i = 0;
-    for(i = 0; i < MAX_LINKED_LIST_SIZE; i++)
+    for(int i = globalNextIndex; i < MAX_LINKED_LIST_SIZE; i++)
     {
       //If a block of the linked list is in use, is a hole, 
       // and has the proper size,
@@ -569,31 +575,33 @@ void * mavalloc_alloc( size_t size )
         //the arenas
         ptr = LinkedList[i].arena;
 
-        //TODO: Bottom three lines
         //Split a node if bigger
         //Calculate remainder size
         int remainder = LinkedList[i].size - ALIGN4(size);
         //Insert new node with remainder sized type H
         if(LinkedList[i].size!=ALIGN4(size))
         {
+          //!= is needed to prevent a hole being created of size 0, since that creates an uneeded hole with a grand total of 0 memory
           insertNode(remainder);
-          LinkedList[i+1].in_use     = 0;
+          LinkedList[i+1].in_use     = 1;
           LinkedList[i+1].size       = remainder;
           LinkedList[i+1].arena      = &LinkedList[i];
           LinkedList[i+1].type       = H;
-          //this TRIES to split the nodes, but idk
+          //splits the node to be a hole node based on the remainder
         }
         
-
+        //changes the current node too
         LinkedList[i].size         = ALIGN4(size);
-        //allocates a memory sizef
+        //I stg this next thing is giving me a migraine
+        globalNextIndex++;
         break;
       }
     }
   }
   else if(globalAlgorithm == BEST_FIT)
   {
-    // current represents the current value of the MavAlloc 
+    // current represents the current value of the MavAlloc
+    //this is different from remainder because of the different contexts
     // linked list index's size
     int current           = 0;
     int i                 = 0;
@@ -605,28 +613,34 @@ void * mavalloc_alloc( size_t size )
       //resets current to 0
       current = 0;
 
+      //if the chunk is a proper enough memory to hold:
       if(LinkedList[i].in_use && LinkedList[i].type == H 
               && LinkedList[i].size >= ALIGN4(size))
       {
+        //calculate the remainder memory between the requested memory, and indexed memory available...
         current = LinkedList[i].size - ALIGN4(size);
+        //and if the remainder is the lowest among what the process has iterated through...
         if(current < relativeBest)
         {
           //relative best is different from relative worst, 
           // like a max and min search
+          //sets the index for allocation to whatever the relatively best fit is
           relativeBestIndex    = i;
           relativeBest         = current;
         }
       }
     }
+    //once the process iterates through the first loop...
     for(i = 0; i < MAX_LINKED_LIST_SIZE; i++)
     {
+      //it enters the second loop, where if finds the where the indexed memory is in the array
       if(i == relativeBestIndex)
       {
+        LinkedList[i].type           = P;
         //assignes the return value to the current "address" 
         //of the arena
         ptr = LinkedList[i].arena;
         
-        //TODO: Bottom three lines
         //Split a node if bigger
         //Calculate remainder size
         int remainder                = LinkedList[i].size - size;
@@ -634,8 +648,7 @@ void * mavalloc_alloc( size_t size )
         if(LinkedList[i].size!=ALIGN4(size))
         {
           insertNode(remainder);
-          LinkedList[i+1].in_use       = 1; // THIS MIGHT BE THE PROBLEM
-                                          // but broke more test cases
+          LinkedList[i+1].in_use       = 1; 
           LinkedList[i+1].size         = ALIGN4(relativeBest);
           LinkedList[i+1].arena        = &LinkedList[i];
           //elder scrolls arena
@@ -643,22 +656,26 @@ void * mavalloc_alloc( size_t size )
           //inserts new node as blank node
         }
         
-
+        //changes the current node too
         LinkedList[i].size           = ALIGN4(size);
-        LinkedList[i].type           = P;
         break;
       }
     }
   }
   else if(globalAlgorithm == WORST_FIT)
   {
+    // current represents the current value of the MavAlloc
+    //this is different from remainder because of the different contexts
+    // linked list index's size
     int current         = 0;
     int i               = 0;
     relativeWorst       = 0;
     relativeWorstIndex  = 0;
     for(i = 0; i < MAX_LINKED_LIST_SIZE; i++)
     {
+      //resets current to 0
       current = 0;
+      //if the chunk is a proper enough memory to hold:
       if(LinkedList[i].in_use && LinkedList[i].type==H 
             && LinkedList[i].size>=size)
       {
@@ -672,8 +689,10 @@ void * mavalloc_alloc( size_t size )
       }
     }
     
+    //once the process iterates through the first loop...
     for(i = 0; i < MAX_LINKED_LIST_SIZE; i++)
     {
+      //it enters the second loop, where if finds the where the indexed memory is in the array
       if(i == relativeWorstIndex)
         {
           //If a block of the linked list is in use, is a hole, and has the proper size,
@@ -682,7 +701,6 @@ void * mavalloc_alloc( size_t size )
           ptr = LinkedList[i].arena;
           //assignes the return value to the current "address" of the arena
 
-          //TODO: Bottom three lines
           //Split a node if bigger
           //Calculate remainder size
           int remainder = LinkedList[i].size - size;
@@ -694,8 +712,7 @@ void * mavalloc_alloc( size_t size )
           //elder scrolls arena
           LinkedList[i+1].type         = H;
           //new node as blank node
-
-
+          
           LinkedList[i].size           = ALIGN4(size);
           //allocates a memory size
           break;

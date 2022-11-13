@@ -5,3 +5,10 @@ main.c 490: WF not splitting free blocks correctly	// Fixed 11/12/22 4:08 am
 main.c 463: BF not splitting free blocks correctly
 main.c 435: NF not splitting free blocks correctly
 main.c 126: mavalloc_alloc not working as intended	// Fixed 11/12/22 3:50 am
+
+// 11/12/22
+main.c 632: Wrong node placement of NF
+main.c 388: Wrong node placement of NF
+main.c 191: Wrong node placement of NF
+Make comments consistent, include comments as necessary, format the files
+Do the benchmarks and the paper
