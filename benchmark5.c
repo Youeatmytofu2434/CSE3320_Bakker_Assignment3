@@ -6,25 +6,79 @@
 
 int main( int argc, char * argv[] )
 {
-  //starts the timer
-  clock_t start = clock();
-  
-  //malloc
-  mavalloc_init( 10001, FIRST_FIT );
+  clock_t start, end;
   char * ptr1;
-  for(int i=0; i<10000; i++)
+
+  int i=0;
+  int j=0;
+  for(int i=0; i<16; i++)
   {
-    //alloc 10k times
-    ptr1 = (char*)mavalloc_alloc( 1 );
+    //starts the timer
+    start = clock();
+    //malloc
+    mavalloc_init( 257, WORST_FIT );
+    for(int j=0; j<256; j++)
+    {
+      //alloc 256 times
+      ptr1 = (char*)mavalloc_alloc( 1 );
+    }
+    //yeet
+    mavalloc_destroy();
+    //ends the timer
+    end = clock();
+
+    //1 million microseconds equals one second
+    double timeTaken = (double)((end-start)*1000000/CLOCKS_PER_SEC);
+    printf("Time taken for benchmark5.c Test 1 Iteration %d: %0.2f microseconds\n",i, timeTaken);
   }
-  //yeet
-  mavalloc_destroy();
 
-  //ends the timer
-  clock_t end = clock();
+  i=0;
+  j=0;
+  for(i=0; i<16; i++)
+  {
+    start = clock();
 
-  //1 million microseconds equals one second
-  double timeTaken = (double)((end-start)*1000000/CLOCKS_PER_SEC);
-  printf("Time taken for benchmark 5: %0.2f microseconds\n", timeTaken);
+    mavalloc_init( 257, WORST_FIT );
+    //malloc
+    for(j=0; j<256; j++)
+    {
+      
+      //alloc 256 times
+      ptr1 = (char*)mavalloc_alloc( 1 );
+      mavalloc_free(ptr1);
+    }
+    //yeet
+    mavalloc_destroy();
+    end = clock();
+    
+    //1 million microseconds equals one second
+    double timeTaken = (double)((end-start)*1000000/CLOCKS_PER_SEC);
+    printf("Time taken for benchmark5.c Test 2 iteration %d: %0.2f microseconds\n",i+1, timeTaken);
+  }
+
+
+  i=0;
+  j=0;
+  for(i=0; i<16; i++)
+  {
+    start = clock();
+
+    //malloc
+    for(j=0; j<256; j++)
+    {
+      mavalloc_init( 257, WORST_FIT );
+      //alloc 256 times
+      ptr1 = (char*)mavalloc_alloc( 1 );
+      mavalloc_destroy();
+    }
+    //yeet
+
+    end = clock();
+    
+    //1 million microseconds equals one second
+    double timeTaken = (double)((end-start)*1000000/CLOCKS_PER_SEC);
+    printf("Time taken for benchmark5.c Test 3 Iteration %d: %0.2f microseconds\n",i+1, timeTaken);
+  }
+
   return 0;
 }
