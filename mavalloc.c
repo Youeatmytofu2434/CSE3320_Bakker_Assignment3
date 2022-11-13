@@ -562,6 +562,12 @@ void * mavalloc_alloc( size_t size )
   }
   else if(globalAlgorithm == NEXT_FIT)
   {
+    if(globalNextIndex>=MAX_LINKED_LIST_SIZE)
+    {
+      globalNextIndex=0;
+    }
+    //rollovers the index value to start again
+    //"Even should you reborn, your desperate search for answers must start again!" -Asahi Saas Brutus (FFXIV Endwalker)
     for(int i = globalNextIndex; i < MAX_LINKED_LIST_SIZE; i++)
     {
       //If a block of the linked list is in use, is a hole, 
@@ -784,6 +790,7 @@ int mavalloc_size( )
     if(LinkedList[i].in_use)
 	  {
       //Fun Fact: One of the two team members of this assignment has spent 750 hours (and counting playing) FFXIV
+      //Fun Fact: That same person thought it would be cool to replace some needless and obvious code with some memes throughout this program
       number_of_nodes++;
     }
   }
