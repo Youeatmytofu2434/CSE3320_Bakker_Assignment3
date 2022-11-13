@@ -725,33 +725,48 @@ void * mavalloc_alloc( size_t size )
 
 void mavalloc_free( void * ptr )
 {
-  //TODO: What on earth is this free method??
+  //currentSize is the index of the node we want to delete, since removeNode only takes in the size of a node as a parameter
+  //negative one is chosen because there is no way the for loop below will ever use a negative number
   int currentSize=-1;
   int i=0;
   for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
   {
+    //if a node is currently in use...
     if(ptr==LinkedList[i].arena && LinkedList[i].type==P && LinkedList[i].in_use)
     {
+      //then we have found out index, so we dont need to iterate through the rest of the loop
       currentSize=LinkedList[i].size;
       break;
     }
   }
+  //note: i is maintained after exit, which we will exploit later
+  //if the index is found...
   if(currentSize!=-1)
   {  
+    //yes, the floor is made of floor
     LinkedList[i].type = H;
+    //if the node after the element in index i is a hole that is used...
     if(LinkedList[i+1].in_use && LinkedList[i+1].type == H )
     {
+      //"merge" the two together by combining both sizes into one
       LinkedList[i].size = LinkedList[i].size+LinkedList[i+1].size;
+      //"Oh, you're broken... I don't want to play with you anymore..." -Andy Whatshislastname from Toy Story 1
       removeNode(LinkedList[i+1].size);
     }
   }
 
+  //This for loop is necessary because there is a chance that even if a node has been yeeted, there is no way in guarenteeing that
+  //all nodes will magically merge together without the algorithm below
+  //...i've learned this the hard way...
   i=0;
   for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
   {
+    //if both the current node and the node after them are nodes within the arena and are holes
     if(LinkedList[i].in_use && LinkedList[i+1].type == H && LinkedList[i].type==H && LinkedList[i+1].in_use)
     {
+      //"merge" the two together by combining both sizes into one
       LinkedList[i].size = LinkedList[i].size+LinkedList[i+1].size;
+      //"Oh, you're broken... I don't want to play with you anymore..." -Andy Whatshislastname from Toy Story 1
       removeNode(LinkedList[i+1].size);
     }
   }
@@ -762,12 +777,16 @@ int mavalloc_size( )
 {
   int number_of_nodes = 0;
   int i=0;
+  //yes, the floor is made of floor
   for(i=0; i<MAX_LINKED_LIST_SIZE; i++)
   {
+    //if a chunk is in an array...
     if(LinkedList[i].in_use)
 	  {
+      //Fun Fact: One of the two team members of this assignment has spent 750 hours (and counting playing) FFXIV
       number_of_nodes++;
     }
   }
+  //snape kills dumbledore
   return number_of_nodes;
 }
