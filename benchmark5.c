@@ -8,6 +8,10 @@
 #define TEST_ITERATION 50
 #define FILENAME "B5_WF.txt"
 
+// function export
+// @description: export the time to complete each test 
+//  to a file 
+// @parameter: a double array
 void export(double timeArr[])
 {
   FILE * fp;
@@ -26,8 +30,10 @@ int main( int argc, char * argv[] )
   
 
   int i, j;  
+  // remove file to avoid appending to existing file
   int _ = remove(FILENAME);
 
+  
   // TEST 1
   mavalloc_init( MAX_SIZE, WORST_FIT );
   for(int i = 0; i < TEST_ITERATION; i++)
@@ -101,6 +107,56 @@ int main( int argc, char * argv[] )
     time[i] = timeTaken;
     printf("Time taken for benchmark5.c Test 3 Iteration %d: %0.2f microseconds\n",i, timeTaken);
   }
+  export(time);
+  
+
+  // TEST 4
+  char * ptrArr2 [MAX_SIZE];
+  char * ptr2;
+  char * ptr3;
+  char * ptr4;
+  char * ptr5;
+  mavalloc_init( MAX_SIZE, WORST_FIT );
+  for(i = 0; i < TEST_ITERATION; i++)
+  {
+    start = clock();
+    
+    for(j = 0; j < (MAX_SIZE / 2); j++)
+    {
+      if(j % 2 == 0)
+        ptrArr2[j] = (char*) mavalloc_alloc(1);
+    }
+    ptr2 = (char*) mavalloc_alloc((MAX_SIZE / 2) / 3);
+    ptr3 = (char*) mavalloc_alloc((MAX_SIZE / 2) / 3);
+    ptr4 = (char*) mavalloc_alloc((MAX_SIZE / 2) / 3);
+    mavalloc_free(ptr3);
+    mavalloc_free(ptr2);
+    ptr5 = (char*) mavalloc_alloc((MAX_SIZE / 10));
+
+    for(j = 0; j < (MAX_SIZE / 10); j++)
+    {
+      ptrArr[j] = (char*) mavalloc_alloc(1);
+    }
+
+    for(j = 0; j < (MAX_SIZE / 2); j++)
+    {
+      if(j % 2 == 0)
+        mavalloc_free(ptrArr2[j]);
+    } 
+
+    for(j = 0; j < (MAX_SIZE / 10); j++)
+    {
+      mavalloc_free(ptrArr[j]);
+    }
+    mavalloc_free(ptr4);
+    mavalloc_free(ptr5);
+
+    end = clock();
+    double timeTaken = (double)((end-start)*1000000/CLOCKS_PER_SEC);
+    time[i] = timeTaken;
+    printf("Time taken for benchmark2.c Test 4 Iteration %d: %0.2f microseconds\n",i, timeTaken);
+  }
+  mavalloc_destroy();
   export(time);
   
   return 0;
