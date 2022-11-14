@@ -468,7 +468,7 @@ int mavalloc_init( size_t size, enum ALGORITHM algorithm )
   //initializes linked list
 
   globalArena = malloc(ALIGN4(size));
-  //elder scrolls arena
+  //initializes first address
 
   LinkedList[0].in_use     = 1;
   LinkedList[0].size       = ALIGN4(size);
@@ -496,9 +496,9 @@ void mavalloc_destroy( )
     LinkedList[i].arena = 0;
     LinkedList[i].type = H;
   }
-  //thanos snaps everything. all will be reduced to nothingness
+  //all will be reduced to nothingness as data is wiped clean
   free(globalArena);
-  //legit the same process as init, where everything is set to blank
+  //the same process as init, where everything is set to blank
   //except that free now exists to prevent memory from crashing
   return;
 }
@@ -535,7 +535,6 @@ void * mavalloc_alloc( size_t size )
         //assignes the return value to the current "address" of the arenas
         ptr = LinkedList[i].arena;
 
-        //TODO: Bottom three lines
         //Split a node if bigger
         //Calculate remainder size
         int remainder = LinkedList[i].size - size;
@@ -545,10 +544,8 @@ void * mavalloc_alloc( size_t size )
         LinkedList[i+1].size             = remainder;
         LinkedList[i+1].arena            = &LinkedList[i];
         LinkedList[i+1].type             = H;
-        //this TRIES to split the nodes, but idk
 
         LinkedList[i].size               = ALIGN4(size);
-        //allocates a memory sizef
         break;
       }
     }
@@ -658,7 +655,6 @@ void * mavalloc_alloc( size_t size )
         //of the arena
         ptr = LinkedList[i].arena;
         
-        //TODO: Bottom three lines
         //Split a node if bigger
         //Calculate remainder size
         int remainder                = LinkedList[i].size - size;
@@ -711,7 +707,6 @@ void * mavalloc_alloc( size_t size )
           ptr = LinkedList[i].arena;
           //assignes the return value to the current "address" of the arena
 
-          //TODO: Bottom three lines
           //Split a node if bigger
           //Calculate remainder size
           int remainder = LinkedList[i].size - size;
@@ -720,7 +715,6 @@ void * mavalloc_alloc( size_t size )
           LinkedList[i+1].in_use       = 1;
           LinkedList[i+1].size         = remainder;
           LinkedList[i+1].arena        = &LinkedList[i];
-          //elder scrolls arena
           LinkedList[i+1].type         = H;
           //new node as blank node
 
@@ -744,15 +738,22 @@ void mavalloc_free( void * ptr )
     if(ptr == LinkedList[i].arena && LinkedList[i].type == P 
             && LinkedList[i].in_use)
     {
+      //if the parameter is in the Linked List, and is not an unused hole memory
+      //the program may proceed to freeing the memory chunk indicated
+      //The indicated memory is indexed based on where this program stops
       currentSize = LinkedList[i].size;
       break;
     }
   }
   if(currentSize != -1)
   {  
+    //May proceed to freeing the memory chunk
+    //Uses the indexed value i to navigate linearly
+    //claims the memory space is available to be overwritten
     LinkedList[i].type = H;
     if(LinkedList[i+1].in_use && LinkedList[i+1].type == H )
     {
+      //and if the space is big enough, the node after the indexed node is merged
       LinkedList[i].size = LinkedList[i].size+LinkedList[i+1].size;
       removeNode(LinkedList[i+1].size);
     }
@@ -763,6 +764,7 @@ void mavalloc_free( void * ptr )
     if(LinkedList[i].in_use && LinkedList[i+1].type == H 
         && LinkedList[i].type == H && LinkedList[i+1].in_use)
     {
+      //iterates through the linked list once more to merge adjacent holes
       LinkedList[i].size = LinkedList[i].size+LinkedList[i+1].size;
       removeNode(LinkedList[i+1].size);
     }
@@ -778,6 +780,7 @@ int mavalloc_size( )
   {
     if(LinkedList[i].in_use)
 	  {
+      //iterates through linked list to find number of nodes, whether it is in_use or not
       number_of_nodes++;
     }
   }
