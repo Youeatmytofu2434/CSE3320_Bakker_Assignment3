@@ -91,7 +91,6 @@ int test_case_3()
   // check your mavalloc_alloc or mavalloc_size and make sure you
   // are combining adjacent free nodes and counting your link list
   // correctly
-
   TINYTEST_EQUAL( size, 1 ); 
 
   mavalloc_destroy( );

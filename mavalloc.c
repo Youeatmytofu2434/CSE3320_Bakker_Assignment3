@@ -582,7 +582,7 @@ void * mavalloc_alloc( size_t size )
         LinkedList[i].size           = tempSize;
 
         // Split a new node 
-        LinkedList[i + 1].in_use     = 1;
+        LinkedList[i + 1].in_use     = 0;
         LinkedList[i + 1].size       = remainder;
         LinkedList[i + 1].arena      = &LinkedList[i];
         LinkedList[i + 1].type       = H;
@@ -678,7 +678,7 @@ void * mavalloc_alloc( size_t size )
     }
   }
 
-  else if(globalAlgorithm == FIRST_FIT)
+  else if(globalAlgorithm == WORST_FIT)
   {
     int current         = 0;
     int i               = 0;
